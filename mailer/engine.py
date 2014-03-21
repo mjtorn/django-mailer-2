@@ -2,7 +2,7 @@ import time
 import smtplib
 import logging
 
-from lockfile import FileLock, AlreadyLocked, LockTimeout
+from mailer.lockfile import FileLock, AlreadyLocked, LockTimeout
 from socket import error as socket_error
 
 from django.conf import settings
@@ -31,29 +31,30 @@ EMAIL_BACKEND = getattr(settings, "MAILER_EMAIL_BACKEND", "django.core.mail.back
 # How many messages can be sent each second
 SEND_RATE = getattr(settings, "MAILER_SEND_RATE", None)
 
-
 def prioritize():
     """
     Yield the messages in the queue in the order they should be sent.
     """
     
     while True:
-        while Message.objects.high_priority().count() or Message.objects.medium_priority().count():
-            while Message.objects.high_priority().count():
-                for message in Message.objects.high_priority().order_by("when_added"):
+        while Message.objects.high_priority().using('default').count() or Message.objects.medium_priority().using('default').count():
+            while Message.objects.high_priority().using('default').count():
+                for message in Message.objects.high_priority().using('default').order_by("when_added"):
                     yield message
-            while Message.objects.high_priority().count() == 0 and Message.objects.medium_priority().count():
-                yield Message.objects.medium_priority().order_by("when_added")[0]
-        while Message.objects.high_priority().count() == 0 and Message.objects.medium_priority().count() == 0 and Message.objects.low_priority().count():
-            yield Message.objects.low_priority().order_by("when_added")[0]
-        if Message.objects.non_deferred().count() == 0:
+            while Message.objects.high_priority().using('default').count() == 0 and Message.objects.medium_priority().using('default').count():
+                yield Message.objects.medium_priority().using('default').order_by("when_added")[0]
+        while Message.objects.high_priority().using('default').count() == 0 and Message.objects.medium_priority().using('default').count() == 0 and Message.objects.low_priority().using('default').count():
+            yield Message.objects.low_priority().using('default').order_by("when_added")[0]
+        if Message.objects.non_deferred().using('default').count() == 0:
             break
-
 
 def send_all():
     """
     Send all eligible messages in the queue.
     """
+    # The actual backend to use for sending, defaulting to the Django default.
+    # To make testing easier this is not stored at module level.
+    EMAIL_BACKEND = getattr(settings, "MAILER_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
     
     lock = FileLock("send_mail")
     
@@ -90,7 +91,7 @@ def send_all():
                 MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
                 message.delete()
                 sent += 1
-            except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError), err:
+            except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError) as err:
                 message.defer()
                 logging.info("message deferred due to failure: %s" % err)
                 MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code

@@ -54,6 +54,12 @@ you can run:
 
 You may want to set these up via cron to run regularly::
 
+
+    *       * * * * (/path/to/your/python /path/to/your/manage.py send_mail >> ~/cron_mail.log 2>&1)
+    0,20,40 * * * * (/path/to/your/python /path/to/your/manage.py retry_deferred >> ~/cron_mail_deferred.log 2>&1)
+
+For use in Pinax, for example, that might look like:
+
     * * * * * (cd $PINAX; /usr/local/bin/python2.5 manage.py send_mail >> $PINAX/cron_mail.log 2>&1)
     0,20,40 * * * * (cd $PINAX; /usr/local/bin/python2.5 manage.py retry_deferred >> $PINAX/cron_mail_deferred.log 2>&1)
 
@@ -83,3 +89,9 @@ the MAILER_EMAIL_BACKEND setting, so that django-mailer knows how to actually se
 the mail::
 
     MAILER_EMAIL_BACKEND = "your.actual.EmailBackend"
+
+If you want email to be sent when the database cannot be reached, you can configure
+a backup backend with MAILER_BACKUP_BACKEND::
+
+     MAILER_BACKUP_BACKEND = "your.actual.EmailBackend"
+
