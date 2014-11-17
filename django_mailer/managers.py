@@ -2,7 +2,12 @@
 # encoding: utf-8
 # ----------------------------------------------------------------------------
 
-import datetime
+try:
+    from django.utils.timezone import now
+except ImportError:
+    import datetime
+    now = datetime.datetime.now
+
 from django.db import models
 from django_mailer import constants
 
@@ -18,7 +23,7 @@ class QueueMethods(object):
         Exclude future time-delayed messages.
 
         """
-        return self.exclude(date_queued__gt=datetime.datetime.now)
+        return self.exclude(date_queued__gt=now)
 
     def high_priority(self):
         """
