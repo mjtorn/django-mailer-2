@@ -1,4 +1,4 @@
-VERSION = (0, 2, 0, "a", 2) # following PEP 386
+VERSION = (0, 3, 0, "a", 1)  # following PEP 386
 DEV_N = '1'
 
 
@@ -31,13 +31,13 @@ def send_mail(subject, message, from_email, recipient_list, priority="medium",
               fail_silently=False, auth_user=None, auth_password=None):
     from django.utils.encoding import force_text
     from mailer.models import make_message
-    
+
     priority = PRIORITY_MAPPING[priority]
-    
+
     # need to do this in case subject used lazy version of ugettext
     subject = force_text(subject)
     message = force_text(message)
-    
+
     make_message(subject=subject,
                  body=message,
                  from_email=from_email,
@@ -55,13 +55,13 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list,
     from django.utils.encoding import force_text
     from django.core.mail import EmailMultiAlternatives
     from mailer.models import make_message
-    
+
     priority = PRIORITY_MAPPING[priority]
-    
+
     # need to do this in case subject used lazy version of ugettext
     subject = force_text(subject)
     message = force_text(message)
-    
+
     msg = make_message(subject=subject,
                        body=message,
                        from_email=from_email,
@@ -77,7 +77,6 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list,
 
 def send_mass_mail(datatuple, fail_silently=False, auth_user=None,
                    auth_password=None, connection=None):
-    from mailer.models import make_message
     num_sent = 0
     for subject, message, sender, recipient in datatuple:
         num_sent += send_mail(subject, message, sender, recipient)
@@ -87,7 +86,7 @@ def send_mass_mail(datatuple, fail_silently=False, auth_user=None,
 def mail_admins(subject, message, fail_silently=False, connection=None, priority="medium"):
     from django.conf import settings
     from django.utils.encoding import force_text
-    
+
     return send_mail(settings.EMAIL_SUBJECT_PREFIX + force_text(subject),
                      message,
                      settings.SERVER_EMAIL,
@@ -97,7 +96,7 @@ def mail_admins(subject, message, fail_silently=False, connection=None, priority
 def mail_managers(subject, message, fail_silently=False, connection=None, priority="medium"):
     from django.conf import settings
     from django.utils.encoding import force_text
-    
+
     return send_mail(settings.EMAIL_SUBJECT_PREFIX + force_text(subject),
                      message,
                      settings.SERVER_EMAIL,
