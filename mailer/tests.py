@@ -7,6 +7,7 @@ import smtplib
 
 sent_messages = []
 
+
 class TestMailerEmailBackend(object):
     def __init__(self, **kwargs):
         global sent_messages
@@ -57,7 +58,6 @@ class TestSending(TestCase):
             self.assertEqual(len(sent_messages), 1)
             self.assertEqual(Message.objects.count(), 0)
             self.assertEqual(MessageLog.objects.count(), 1)
-
 
     def test_retry_deferred(self):
         global sent_messages

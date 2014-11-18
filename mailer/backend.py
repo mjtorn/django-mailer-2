@@ -11,6 +11,7 @@ if BACKUP_BACKEND_NAME:
 else:
     BACKUP_BACKEND = None
 
+
 class DbBackend(BaseEmailBackend):
 
     def send_messages(self, email_messages):
@@ -22,7 +23,7 @@ class DbBackend(BaseEmailBackend):
                 msg.save()
                 num_sent += 1
             return num_sent
-        except Exception, e:
+        except Exception:
             if BACKUP_BACKEND:
                 return BACKUP_BACKEND.send_messages(email_messages)
             else:

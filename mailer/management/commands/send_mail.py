@@ -20,7 +20,7 @@ class Command(NoArgsCommand):
         ),
     )
     option_list = NoArgsCommand.option_list + base_options
-    
+
     def handle_noargs(self, **options):
         if options['cron'] == 0:
             logging.basicConfig(level=logging.DEBUG, format="%(message)s")
