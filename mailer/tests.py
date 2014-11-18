@@ -40,6 +40,9 @@ class TestBackend(TestCase):
         with self.settings(EMAIL_BACKEND="mailer.backend.DbBackend"):
             send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
             self.assertEqual(Message.objects.count(), 1)
+            msg = Message.objects.latest('id')
+            self.assertEqual(msg.subject, "Subject")
+            self.assertEqual(msg.body, "Body")
 
 
 class TestSending(TestCase):

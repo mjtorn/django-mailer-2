@@ -84,6 +84,11 @@ def db_to_email(data):
 class Message(models.Model):
     # The actual data - a pickled EmailMessage
     message_data = models.TextField()
+
+    # Though some things may be worth having accessible
+    subject = models.CharField(max_length=1024, null=True, blank=True, default=None)
+    body = models.TextField(null=True, blank=True, default=None)
+
     when_added = models.DateTimeField(default=datetime_now)
     priority = models.CharField(max_length=1, choices=PRIORITIES, default="2")
     # @@@ campaign?
@@ -112,6 +117,8 @@ class Message(models.Model):
 
     def _set_email(self, val):
         self.message_data = email_to_db(val)
+        self.subject = val.subject or None
+        self.body = val.body or None
     email = property(_get_email, _set_email,
                 doc="""EmailMessage object. If this is mutated, you will need to
 set the attribute again to cause the underlying serialised data to be updated.""")
@@ -123,14 +130,6 @@ set the attribute again to cause the underlying serialised data to be updated.""
             return email.to
         else:
             return []
-
-    @property
-    def subject(self):
-        email = self.email
-        if email is not None:
-            return email.subject
-        else:
-            return ""
 
 
 def filter_recipient_list(lst):
