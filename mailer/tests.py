@@ -1,3 +1,4 @@
+from django.core.mail import send_mail
 from django.test import TestCase
 
 from mailer.models import Message, MessageLog
@@ -35,7 +36,6 @@ class TestBackend(TestCase):
         """
         Test that using send_mail creates a Message object in DB instead, when EMAIL_BACKEND is set.
         """
-        from django.core.mail import send_mail
         self.assertEqual(Message.objects.count(), 0)
         with self.settings(EMAIL_BACKEND="mailer.backend.DbBackend"):
             send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
@@ -43,6 +43,32 @@ class TestBackend(TestCase):
             msg = Message.objects.latest('id')
             self.assertEqual(msg.subject, "Subject")
             self.assertEqual(msg.body, "Body")
+
+    def update_message(self):
+        """
+        Test what migration 0003 does; resets subject and message based on email object
+        """
+
+        # Don't bother fudging the EmailMessage object, this is good enough
+        with self.settings(EMAIL_BACKEND="mailer.backend.DbBackend"):
+            send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
+            self.assertEqual(Message.objects.count(), 1)
+        msg = Message.objects.latest('id')
+
+        # Strictly pre-migration
+        msg.subject = msg.body = None
+        msg.save()
+        msg = Message.objects.latest('id')
+        self.assertEqual(msg.subject, None)
+        self.assertEqual(msg.body, None)
+
+        # Reset also subject and body
+        msg.email = msg.email
+        msg.save()
+
+        msg = Message.objects.latest('id')
+        self.assertEqual(msg.subject, "Subject")
+        self.assertEqual(msg.body, "Body")
 
 
 class TestSending(TestCase):
